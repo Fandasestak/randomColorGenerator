@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Přihlášení</title>
+    <style>
+        body {
+            color: whitesmoke;
+            background-color: rgb(48, 45, 45);
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+            transition: background-color 0.5s ease;
+        }
+        #login {
+            margin-top: 20px;
+        }
+        #login-form {
+            text-align: center;
+            justify-content: space-evenly;
+        }
+        #generator {
+            display: none;
+            text-align: center;
+            margin-top: 50px;
+        }
+        #color-display {
+            color: whitesmoke;
+            margin-top: 20px;
+            padding: 20px;
+            display: inline-block;
+            background-color: none;
+        }
+        #favorites {
+            margin-top: 20px;
+        }
+        .favorite-color {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            margin: 5px;
+            border: 1px solid rgb(48, 45, 45);
+            border-radius: 5px;
+            position: relative;
+            transition: all 1s;
+            text-align: center;
+        }
+        .favorite-color:hover {
+            border-radius: 50%;
+        }
+        .delete-button {
+            display: none;
+            position: absolute;
+            color: red;
+            top: 20%;
+            left: 40%;
+            transform: translate(-50%, -50%);
+            background-color: none;
+            color: none;
+            border: none;
+            background: none;
+            font-size: larger;
+            width: 20px;
+            height: 25px;
+            text-align: center;
+            cursor: pointer;
+        }
+        .favorite-color:hover .delete-button {
+            display: block;
+        }
+        .color-code {
+            display: block;
+            margin-top: 50px;
+            font-size: smaller;
+            color: whitesmoke;
+            transition: all 1s;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-evenly;
+            height: 150px;
+        }
+        input {
+            background: none;
+            border: 1px solid whitesmoke;
+            color: whitesmoke;
+            padding: 10px;
+            margin: 10px 0;
+            width: calc(100% - 44px);
+            transition: 1s;
+            text-align: center;
+        }
+        input:hover {
+            cursor: pointer;
+            border: 1px solid grey;
+            color: grey;
+            border-radius: 5px;
+        }
+        .color-code, .color-buttons {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        button {
+            background: none;
+            border: 1px solid whitesmoke;
+            color: whitesmoke;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: large;
+            margin: 10px 0;
+            transition: 1s;
+            cursor: pointer;
+        }
+        button:hover {
+            border-radius: 20%;
+        }
+    </style>
+</head>
+<body>
+    <div id="login">
+        <h1>Přihlášení</h1>
+        <form id="login-form">
+            <input type="text" id="username" placeholder="Uživatelské jméno" required>
+            <input type="password" id="password" placeholder="Heslo" required>
+            <button type="submit">Přihlásit se</button>
+        </form>
+    </div>
+    <div id="generator">
+        <h1>Generátor náhodných barev</h1>
+        <div class="color-code">
+            <div id="color-display">
+                <p id="color-hex">#hex</p>
+            </div>
+            <div class="color-buttons">
+                <button id="generate-color">Generovat barvu</button>
+            </div>
+        </div>
+        <div id="favorites">
+            <h2>Oblíbené barvy</h2>
+            <button id="save-color">Uložit barvu</button>
+            <div id="favorite-colors"></div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const loginForm = document.getElementById('login-form');
+            const loginDiv = document.getElementById('login');
+            const generatorDiv = document.getElementById('generator');
+            const generateColorButton = document.getElementById('generate-color');
+            const saveColorButton = document.getElementById('save-color');
+            const colorDisplay = document.getElementById('color-display');
+            const colorHex = document.getElementById('color-hex');
+            const favoriteColorsDiv = document.getElementById('favorite-colors');
+           
+            let currentColor = '#FFFFFF';
+            let favorites = [];
+            let loggedInUser = null;
+ 
+            function generateRandomColor() {
+                const randomColor = '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
+                currentColor = randomColor;
+                document.body.style.backgroundColor = currentColor;
+                colorHex.textContent = currentColor;
+            }
+ 
+            function loadFavorites() {
+                const storedFavorites = localStorage.getItem('favorites');
+                if (storedFavorites) {
+                    favorites = JSON.parse(storedFavorites);
+                    displayFavorites();
+                }
+            }
+ 
+            function saveFavorites() {
+                localStorage.setItem('favorites', JSON.stringify(favorites));
+            }
+ 
+            function displayFavorites() {
+                favoriteColorsDiv.innerHTML = '';
+                favorites.forEach((color, index) => {
+                    const colorDiv = document.createElement('div');
+                    colorDiv.className = 'favorite-color';
+                    colorDiv.style.backgroundColor = color;
+ 
+                    const deleteButton = document.createElement('button');
+                    deleteButton.className = 'delete-button';
+                    deleteButton.textContent = 'X';
+                    deleteButton.onclick = () => {
+                        favorites.splice(index, 1);
+                        saveFavorites();
+                        displayFavorites();
+                    };
+
+                    const colorCode = document.createElement('div');
+                    colorCode.className = 'color-code';
+                    colorCode.textContent = color;
+
+                    colorDiv.appendChild(deleteButton);
+                    colorDiv.appendChild(colorCode);
+                    favoriteColorsDiv.appendChild(colorDiv);
+                });
+            }
+ 
+            function handleLogin(event) {
+                event.preventDefault();
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+ 
+                if (username && password) {
+                    loggedInUser = username;
+                    loginDiv.style.display = 'none';
+                    generatorDiv.style.display = 'block';
+                    loadFavorites();
+                }
+            }
+ 
+            generateColorButton.addEventListener('click', generateRandomColor);
+            saveColorButton.addEventListener('click', () => {
+                if (favorites.length >= 10) {
+                    alert('Vyber si jen 10 oblíbených barev');
+                } else if (!favorites.includes(currentColor)) {
+                    favorites.push(currentColor);
+                    saveFavorites();
+                    displayFavorites();
+                }
+            });
+            loginForm.addEventListener('submit', handleLogin);
+ 
+            loadFavorites();
+        });
+    </script>
+</body>
+</html>
+
+
